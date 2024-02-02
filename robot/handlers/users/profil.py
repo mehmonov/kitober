@@ -8,7 +8,7 @@ from robot.utils.search_status import search_status
 from robot.utils.search_status_obj import search_status_obj
 from robot.utils.my_requested import my_requested
 from robot.utils.my_requested import my_requested_item
-
+from loader import bot
 from robot.utils.get_book import get_book
 
 @dp.message_handler(text="Profil 👤")
@@ -94,7 +94,7 @@ async def get_status(query: types.CallbackQuery):
     if provision == 'self':
         post += f"🧲 <b>Yetkazish sharti</b>: <i>O'zim yetkazaman </i>\n"
     
-    elif provision == 'post':
+    elif provision ==  'post':
         post += f"🧲 <b>Yetkazish sharti</b>: <i>Pochta orqali </i>\n"
     
     elif provision == 'pickup':
@@ -117,7 +117,7 @@ async def my_requestes(message: types.Message):
     keyboard = types.InlineKeyboardMarkup()
     
     for i, (book_name, user_fullname) in enumerate(zip(book_names, user_fullnames), start=1):
-        callback_data = f"myrequested_{statuses[i-1].pk}"  # Assuming each status has a primary key
+        callback_data = f"myrequested_{statuses[i-1].pk}"  
         button_text = f"{i}. {book_name} - {user_fullname}"
         keyboard.add(types.InlineKeyboardButton(button_text, callback_data=callback_data))
 
@@ -173,26 +173,43 @@ async def get_status(query: types.CallbackQuery):
         
         
     post += f"<b>-------------------</b>\n\n\n"
-    if status.status != 'accepted' or status.status != 'rejected' or 'completed':
+    if status.status == 'accepted' or status.status == 'rejected' or status.status == 'completed':
+        await query.message.answer("Bu kitob bilan allaqachon nimadir sodir bo'lgan")
+       
+    else:
         post += f"<i>Ushbu userga ijaraga berasizmi kitobni? quyidagi tugmalar orqali tasdiqlang</i>\n"
 
-    inline_keyboard = types.InlineKeyboardMarkup(row_width=2)
-    inline_keyboard.add(
-        types.InlineKeyboardButton("Ha", callback_data=f"confirm_{status.pk}"),
-        types.InlineKeyboardButton("Yo'q", callback_data=f"reject_{status.pk}")
-    )
+        inline_keyboard = types.InlineKeyboardMarkup(row_width=2)
+        inline_keyboard.add(
+            types.InlineKeyboardButton("Ha", callback_data=f"confirm_{status.pk}"),
+            types.InlineKeyboardButton("Yo'q", callback_data=f"reject_{status.pk}")
+        )
 
-    if status.book.image != None or '':
-        await query.message.answer_photo(photo=status.book.image, caption=post, parse_mode='HTML', reply_markup=inline_keyboard)
-    else:
-        await query.message.answer(post, parse_mode='HTML', reply_markup=inline_keyboard)
+        if status.book.image != None or '':
+            await query.message.answer_photo(photo=status.book.image, caption=post, parse_mode='HTML', reply_markup=inline_keyboard)
+        else:
+            await query.message.answer(post, parse_mode='HTML', reply_markup=inline_keyboard)
     
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('confirm'))
 async def accept_or_reject(query: types.CallbackQuery): 
     status_id = query.data.split('_')[1]  
     status = await sync_to_async(Status.objects.get)(id=status_id)
     status.status = 'accepted'
-    await sync_to_async(status.save)()
     
-    print(status.pk)
+    await sync_to_async(status.save)()
+    book_name = await sync_to_async(lambda: status.book.name)()
+    chat_id = await sync_to_async(lambda: status.borrower.chat_id)()
+    await bot.send_message(chat_id=chat_id, text=f"Sizni kitobingiz tasdiqlandi! \n\nKitob: {book_name}")
+    await query.message.answer("Ajoyib, kitob tasdiqlandi")
+    
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith('reject'))
+async def accept_or_reject(query: types.CallbackQuery): 
+    status_id = query.data.split('_')[1]  
+    status = await sync_to_async(Status.objects.get)(id=status_id)
+    book_name = await sync_to_async(lambda: status.book.name)()
+    
+    chat_id = await sync_to_async(lambda: status.borrower.chat_id)()
+    await bot.send_message(chat_id=chat_id, text=f"Sizni kitobingiz tasdiqlanmadi! \n\nKitob: {book_name}")
+    
+    await query.message.answer("Ajoyib, bu habarni yetkazamiz")
     

@@ -108,7 +108,7 @@ async def add_book(message: types.Message, state: FSMContext):
         print(f"data: {data}")
 
 @dp.message_handler(state=AddBook.author,commands='Bekor qilish')
-@dp.message_handler(Text(equals='Bekor qilish', ignore_case=True),state=AddBook.author)
+@dp.message_handler(Text(equals='Bekor qilish', ignore_case=True),state='*')
 async def add_book(message: types.Message, state: FSMContext):
     await state.finish()
     await message.answer(text="Mayli. Bekor qilamiz", reply_markup=menu)

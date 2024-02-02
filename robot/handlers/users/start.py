@@ -13,7 +13,12 @@ from robot.keyboards.default import make_buttons
 from asgiref.sync import sync_to_async
 from robot.keyboards.default.menu import menu
 from robot.utils.get_user import get_user
+from robot.states.search_book import SearchBook
 
+@dp.message_handler(state="*",text='Bosh menyu')
+async def info(message: types.Message):
+
+    await message.answer("Bosh menyuga qaytamiz", reply_markup=menu)
 
 
 @dp.message_handler(CommandStart())
@@ -36,12 +41,6 @@ async def bot_start(message: types.Message):
 @dp.message_handler(text='Biz haqimizda 👁️')
 async def info(message: types.Message):
 
-    await message.answer("Savollar:  @husniddin092")
-
-
-@dp.message_handler(state='*',text='Bosh menyu')
-async def info(message: types.Message):
-
-    await message.answer("Bosh menyuga qaytamiz", reply_markup=menu)
+    await message.answer("Bot haqida savollaringiz mavjud bo'lsa aloqaga chiqing. Dasturchi:  @husniddin092")
 
 

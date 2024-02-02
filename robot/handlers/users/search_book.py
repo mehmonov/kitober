@@ -21,19 +21,21 @@ async def get_books(message: types.Message, state: FSMContext):
     query = message.text
     books = await search_books(query)
     if not books:
-        await message.answer("Uzr, hech nima topilmadi.")
-    user_id = message.from_user.id
-    # print(user_id.pk)
-    await state.update_data(user_id=user_id)
-    
-    i_kb = types.InlineKeyboardMarkup()
-    for book in books:
-        button = types.InlineKeyboardButton(book.name, callback_data=f"book_{book.pk}")
-        i_kb.add(button)
+        await message.answer("Uzr, hech nima topilmadi. Kitob qidirish tugmasini bosib, qayta urinib ko'ring")
+        await state.finish()
+    else:
+        
+        user_id = message.from_user.id
+        await state.update_data(user_id=user_id)
+        
+        i_kb = types.InlineKeyboardMarkup()
+        for book in books:
+            button = types.InlineKeyboardButton(book.name, callback_data=f"book_{book.pk}")
+            i_kb.add(button)
 
-        response_message = f"Sizning so'rovingiz bo'yicha {len(books)} dona kitob topdik "
-        await message.answer(response_message, reply_markup=i_kb)
-        await SearchBook.result.set()
+            response_message = f"Sizning so'rovingiz bo'yicha {len(books)} dona kitob topdik "
+            await message.answer(response_message, reply_markup=i_kb)
+            await SearchBook.result.set()
 
 @dp.callback_query_handler(state=SearchBook.result)
 async def allquery(query: types.CallbackQuery, state: FSMContext):
@@ -91,10 +93,9 @@ async def rent(query: types.CallbackQuery, state: FSMContext):
                     await query.message.answer("Iya, avval ijaraga olgan ekanmiz-ku bu kitobni.Balki boshqa kitob izlab ko'rarmiz?")
             await state.finish()
         else:
-            # Agar book_id_str bo'sh bo'lsa, qandaydir xatolik yuzaga keldi.
-            print("Error: book_id_str is empty.")
+            await query.message.answer("Asosiy bo'lim", reply_markup=menu)
 
     except ValueError as e:
-        # Agar int() funktsiyasi xatolik yuzaga kelsa.
+        
         print(f"Error converting book_id_str to integer: {e}")
 
