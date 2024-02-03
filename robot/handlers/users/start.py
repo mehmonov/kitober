@@ -41,6 +41,6 @@ async def bot_start(message: types.Message):
 @dp.message_handler(text='Biz haqimizda 👁️')
 async def info(message: types.Message):
 
-    await message.answer("Bot haqida savollaringiz mavjud bo'lsa aloqaga chiqing. Dasturchi:  @husniddin092")
+    await message.answer("Bot haqida savollaringiz mavjud bo'lsa aloqaga chiqing:  @husniddin092")
 
 
